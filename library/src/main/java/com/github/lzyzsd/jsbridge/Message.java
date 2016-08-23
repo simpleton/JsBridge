@@ -14,50 +14,50 @@ import java.util.List;
  */
 public class Message {
 
-	private String callbackId; //callbackId
-	private String responseId; //responseId
-	private String responseData; //responseData
-	private String data; //data of message
-	private String handlerName; //name of handler
+    private String callbackId; //callbackId
+    private String responseId; //responseId
+    private String responseData; //responseData
+    private String data; //data of message
+    private String handlerName; //name of handler
 
     private final static String CALLBACK_ID_STR = "callbackId";
     private final static String RESPONSE_ID_STR = "responseId";
     private final static String RESPONSE_DATA_STR = "responseData";
     private final static String DATA_STR = "data";
     private final static String HANDLER_NAME_STR = "handlerName";
-	
-	public String getResponseId() {
-		return responseId;
-	}
-	public void setResponseId(String responseId) {
-		this.responseId = responseId;
-	}
-	public String getResponseData() {
-		return responseData;
-	}
-	public void setResponseData(String responseData) {
-		this.responseData = responseData;
-	}
-	public String getCallbackId() {
-		return callbackId;
-	}
-	public void setCallbackId(String callbackId) {
-		this.callbackId = callbackId;
-	}
-	public String getData() {
-		return data;
-	}
-	public void setData(String data) {
-		this.data = data;
-	}
-	public String getHandlerName() {
-		return handlerName;
-	}
-	public void setHandlerName(String handlerName) {
-		this.handlerName = handlerName;
-	}
-	
-	public String toJson() {
+
+    public String getResponseId() {
+        return responseId;
+    }
+    public void setResponseId(String responseId) {
+        this.responseId = responseId;
+    }
+    public String getResponseData() {
+        return responseData;
+    }
+    public void setResponseData(String responseData) {
+        this.responseData = responseData;
+    }
+    public String getCallbackId() {
+        return callbackId;
+    }
+    public void setCallbackId(String callbackId) {
+        this.callbackId = callbackId;
+    }
+    public String getData() {
+        return data;
+    }
+    public void setData(String data) {
+        this.data = data;
+    }
+    public String getHandlerName() {
+        return handlerName;
+    }
+    public void setHandlerName(String handlerName) {
+        this.handlerName = handlerName;
+    }
+
+    public String toJson() {
         JSONObject jsonObject= new JSONObject();
         try {
             jsonObject.put(CALLBACK_ID_STR, getCallbackId());
@@ -71,8 +71,8 @@ public class Message {
         }
         return null;
     }
-	
-	public static Message toObject(String jsonStr) {
+
+    public static Message toObject(String jsonStr) {
         Message m =  new Message();
         try {
             JSONObject jsonObject = new JSONObject(jsonStr);
@@ -86,9 +86,9 @@ public class Message {
             e.printStackTrace();
         }
         return m;
-	}
-	
-	public static List<Message> toArrayList(String jsonStr){
+    }
+
+    public static List<Message> toArrayList(String jsonStr){
         List<Message> list = new ArrayList<Message>();
         try {
             JSONArray jsonArray = new JSONArray(jsonStr);
@@ -106,5 +106,5 @@ public class Message {
             e.printStackTrace();
         }
         return list;
-	}
+    }
 }
