@@ -19,7 +19,7 @@ import com.google.gson.Gson;
 public class MainActivity extends Activity implements OnClickListener {
 
     private final String TAG = "MainActivity";
-
+    private String inputString;
     BridgeWebView webView;
 
     Button button;
@@ -41,6 +41,11 @@ public class MainActivity extends Activity implements OnClickListener {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        StringBuilder stringBuilder = new StringBuilder();
+        for (int i = 0; i < 100000; i++) {
+            stringBuilder.append("这是一段测试数据");
+        }
+        inputString = stringBuilder.toString();
         setContentView(R.layout.activity_main);
 
         webView = (BridgeWebView) findViewById(R.id.webView);
@@ -118,7 +123,7 @@ public class MainActivity extends Activity implements OnClickListener {
     @Override
     public void onClick(View v) {
         if (button.equals(v)) {
-            webView.callHandler("functionInJs", "data from Java", new ValueCallback<String>() {
+            webView.callHandler("functionInJs", inputString, new ValueCallback<String>() {
                 @Override
                 public void onReceiveValue(String data) {
                     Log.i(TAG, "response data from js " + data);
