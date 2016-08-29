@@ -11,7 +11,7 @@
     var receiveMessageQueue = [];
     var messageHandlers = {};
 
-    var CUSTOM_PROTOCOL_SCHEME = 'yy';
+    var CUSTOM_PROTOCOL_SCHEME = 'jsbridge';
     var QUEUE_HAS_MESSAGE = '__QUEUE_MESSAGE__/';
 
     var responseCallbacks = {};

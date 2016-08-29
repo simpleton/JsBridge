@@ -134,7 +134,12 @@ public class BridgeWebView extends WebView implements WebViewJavascriptBridge {
         messageJson = messageJson.replaceAll("(?<=[^\\\\])(\")", "\\\\\"");
         String javascriptCommand = String.format(BridgeUtil.JS_HANDLE_MESSAGE_FROM_JAVA, messageJson);
         if (Thread.currentThread() == Looper.getMainLooper().getThread()) {
-            this.loadUrl(javascriptCommand);
+            this.loadUrl(javascriptCommand, new ValueCallback<String>() {
+                @Override
+                public void onReceiveValue(String s) {
+                    Log.i(TAG, s);
+                }
+            });
         }
     }
 
