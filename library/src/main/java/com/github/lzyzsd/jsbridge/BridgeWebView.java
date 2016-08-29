@@ -24,7 +24,7 @@ public class BridgeWebView extends WebView implements WebViewJavascriptBridge {
     private final String TAG = "BridgeWebView";
 
     public static final String toLoadJs = "WebViewJavascriptBridge.js";
-    Map<String, CallBackFunction> responseCallbacks = new HashMap<>();
+    Map<String, ValueCallback<String>> responseCallbacks = new HashMap<>();
     Map<String, BridgeHandler> messageHandlers = new HashMap<>();
     BridgeHandler defaultHandler = new DefaultHandler();
 
@@ -75,16 +75,20 @@ public class BridgeWebView extends WebView implements WebViewJavascriptBridge {
         this.setWebViewClient(generateBridgeWebViewClient());
     }
 
+    private boolean useNativeCallback() {
+        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT;
+    }
+
     protected BridgeWebViewClient generateBridgeWebViewClient() {
         return new BridgeWebViewClient(this);
     }
 
     void handlerReturnData(String url) {
         String functionName = BridgeUtil.getFunctionFromReturnUrl(url);
-        CallBackFunction f = responseCallbacks.get(functionName);
+        ValueCallback<String> f = responseCallbacks.get(functionName);
         String data = BridgeUtil.getDataFromReturnUrl(url);
         if (f != null) {
-            f.onCallBack(data);
+            f.onReceiveValue(data);
             responseCallbacks.remove(functionName);
         }
     }
@@ -95,11 +99,11 @@ public class BridgeWebView extends WebView implements WebViewJavascriptBridge {
     }
 
     @Override
-    public void send(String data, CallBackFunction responseCallback) {
+    public void send(String data, ValueCallback<String> responseCallback) {
         doSend(null, data, responseCallback);
     }
 
-    private void doSend(String handlerName, String data, CallBackFunction responseCallback) {
+    private void doSend(String handlerName, String data, ValueCallback<String> responseCallback) {
         Message m = new Message();
         if (!TextUtils.isEmpty(data)) {
             m.setData(data);
@@ -136,10 +140,9 @@ public class BridgeWebView extends WebView implements WebViewJavascriptBridge {
 
     void flushMessageQueue() {
         if (Thread.currentThread() == Looper.getMainLooper().getThread()) {
-            loadUrl(BridgeUtil.JS_FETCH_QUEUE_FROM_JAVA, new CallBackFunction() {
-
+            loadUrl(BridgeUtil.JS_FETCH_QUEUE_FROM_JAVA, new ValueCallback<String>() {
                 @Override
-                public void onCallBack(String data) {
+                public void onReceiveValue(String data) {
                     // deserializeMessage
                     List<Message> list;
                     try {
@@ -156,18 +159,18 @@ public class BridgeWebView extends WebView implements WebViewJavascriptBridge {
                         String responseId = m.getResponseId();
                         // 是否是response
                         if (!TextUtils.isEmpty(responseId)) {
-                            CallBackFunction function = responseCallbacks.get(responseId);
+                            ValueCallback<String> function = responseCallbacks.get(responseId);
                             String responseData = m.getResponseData();
-                            function.onCallBack(responseData);
+                            function.onReceiveValue(responseData);
                             responseCallbacks.remove(responseId);
                         } else {
-                            CallBackFunction responseFunction;
+                            ValueCallback<String> responseFunction;
                             // if had callbackId
                             final String callbackId = m.getCallbackId();
                             if (!TextUtils.isEmpty(callbackId)) {
-                                responseFunction = new CallBackFunction() {
+                                responseFunction = new ValueCallback<String>() {
                                     @Override
-                                    public void onCallBack(String data) {
+                                    public void onReceiveValue(String data) {
                                         Message responseMsg = new Message();
                                         responseMsg.setResponseId(callbackId);
                                         responseMsg.setResponseData(data);
@@ -175,10 +178,10 @@ public class BridgeWebView extends WebView implements WebViewJavascriptBridge {
                                     }
                                 };
                             } else {
-                                responseFunction = new CallBackFunction() {
+                                responseFunction = new ValueCallback<String>() {
                                     @Override
-                                    public void onCallBack(String data) {
-                                        // do nothing
+                                    public void onReceiveValue(String s) {
+
                                     }
                                 };
                             }
@@ -198,11 +201,10 @@ public class BridgeWebView extends WebView implements WebViewJavascriptBridge {
         }
     }
 
-    public void loadUrl(String jsUrl, CallBackFunction returnCallback) {
-        evaluateJavascript(jsUrl, null);
-        responseCallbacks.put(BridgeUtil.parseFunctionName(jsUrl), returnCallback);
+    public void loadUrl(String jsUrl, final ValueCallback<String> callback) {
+        evaluateJavascript(jsUrl, callback);
+        responseCallbacks.put(BridgeUtil.parseFunctionName(jsUrl), callback);
     }
-
 
     public void evaluateJavascript(String script, ValueCallback<String> callback) {
         if (TextUtils.isEmpty(script)) {
@@ -242,7 +244,6 @@ public class BridgeWebView extends WebView implements WebViewJavascriptBridge {
     }
 
 
-
     /**
      * register handler,so that javascript can call it
      */
@@ -255,7 +256,7 @@ public class BridgeWebView extends WebView implements WebViewJavascriptBridge {
     /**
      * call javascript registered handler
      */
-    public void callHandler(String handlerName, String data, CallBackFunction callBack) {
+    public void callHandler(String handlerName, String data, ValueCallback<String> callBack) {
         doSend(handlerName, data, callBack);
     }
 }

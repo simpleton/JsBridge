@@ -13,7 +13,6 @@ import android.widget.Button;
 
 import com.github.lzyzsd.jsbridge.BridgeHandler;
 import com.github.lzyzsd.jsbridge.BridgeWebView;
-import com.github.lzyzsd.jsbridge.CallBackFunction;
 import com.github.lzyzsd.jsbridge.DefaultHandler;
 import com.google.gson.Gson;
 
@@ -75,9 +74,9 @@ public class MainActivity extends Activity implements OnClickListener {
         webView.registerHandler("submitFromWeb", new BridgeHandler() {
 
             @Override
-            public void handler(String data, CallBackFunction function) {
+            public void handler(String data, ValueCallback<String> function) {
                 Log.i(TAG, "handler = submitFromWeb, data from web = " + data);
-                function.onCallBack("submitFromWeb exe, response data 中文 from Java");
+                function.onReceiveValue("submitFromWeb exe, response data 中文 from Java");
             }
 
         });
@@ -88,15 +87,14 @@ public class MainActivity extends Activity implements OnClickListener {
         user.location = location;
         user.name = "大头鬼";
 
-        webView.callHandler("functionInJs", new Gson().toJson(user), new CallBackFunction() {
+        webView.callHandler("functionInJs", new Gson().toJson(user), new ValueCallback<String>() {
             @Override
-            public void onCallBack(String data) {
+            public void onReceiveValue(String s) {
 
             }
         });
 
         webView.send("hello");
-
     }
 
     public void pickFile() {
@@ -120,17 +118,12 @@ public class MainActivity extends Activity implements OnClickListener {
     @Override
     public void onClick(View v) {
         if (button.equals(v)) {
-            webView.callHandler("functionInJs", "data from Java", new CallBackFunction() {
-
+            webView.callHandler("functionInJs", "data from Java", new ValueCallback<String>() {
                 @Override
-                public void onCallBack(String data) {
-                    // TODO Auto-generated method stub
-                    Log.i(TAG, "reponse data from js " + data);
+                public void onReceiveValue(String data) {
+                    Log.i(TAG, "response data from js " + data);
                 }
-
             });
         }
-
     }
-
 }

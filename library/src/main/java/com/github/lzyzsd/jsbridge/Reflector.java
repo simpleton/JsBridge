@@ -4,10 +4,6 @@ import android.util.Log;
 
 import java.lang.reflect.Field;
 
-/**
- * Created by sun on 8/24/16.
- */
-
 class Reflector<T> {
 
     private static final String TAG = "Reflector";

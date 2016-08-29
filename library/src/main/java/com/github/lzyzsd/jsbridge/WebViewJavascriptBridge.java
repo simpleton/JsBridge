@@ -1,9 +1,9 @@
 package com.github.lzyzsd.jsbridge;
 
 
-public interface WebViewJavascriptBridge {
+import android.webkit.ValueCallback;
 
-    public void send(String data);
-    public void send(String data, CallBackFunction responseCallback);
-
+interface WebViewJavascriptBridge {
+    void send(String data);
+    void send(String data, ValueCallback<String> responseCallback);
 }

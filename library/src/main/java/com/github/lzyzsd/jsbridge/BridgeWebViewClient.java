@@ -10,11 +10,11 @@ import java.net.URLDecoder;
 /**
  * Created by bruce on 10/28/15.
  */
-public class BridgeWebViewClient extends WebViewClient {
+class BridgeWebViewClient extends WebViewClient {
 
     private BridgeWebView webView;
 
-    public BridgeWebViewClient(BridgeWebView webView) {
+    BridgeWebViewClient(BridgeWebView webView) {
         this.webView = webView;
     }
 
@@ -45,12 +45,8 @@ public class BridgeWebViewClient extends WebViewClient {
     @Override
     public void onPageFinished(WebView view, String url) {
         super.onPageFinished(view, url);
+        BridgeUtil.webViewLoadLocalJs(view, BridgeWebView.toLoadJs);
 
-        if (BridgeWebView.toLoadJs != null) {
-            BridgeUtil.webViewLoadLocalJs(view, BridgeWebView.toLoadJs);
-        }
-
-        //
         if (webView.getStartupMessage() != null) {
             for (Message m : webView.getStartupMessage()) {
                 webView.dispatchMessage(m);

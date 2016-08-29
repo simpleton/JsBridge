@@ -12,7 +12,7 @@ import java.util.List;
  * @author haoqing
  *
  */
-public class Message {
+class Message {
 
     private String callbackId; //callbackId
     private String responseId; //responseId
@@ -26,38 +26,39 @@ public class Message {
     private final static String DATA_STR = "data";
     private final static String HANDLER_NAME_STR = "handlerName";
 
-    public String getResponseId() {
-        return responseId;
-    }
-    public void setResponseId(String responseId) {
-        this.responseId = responseId;
-    }
-    public String getResponseData() {
-        return responseData;
-    }
-    public void setResponseData(String responseData) {
-        this.responseData = responseData;
-    }
-    public String getCallbackId() {
-        return callbackId;
-    }
-    public void setCallbackId(String callbackId) {
-        this.callbackId = callbackId;
-    }
     public String getData() {
         return data;
     }
     public void setData(String data) {
         this.data = data;
     }
-    public String getHandlerName() {
+
+    String getResponseId() {
+        return responseId;
+    }
+    void setResponseId(String responseId) {
+        this.responseId = responseId;
+    }
+    String getResponseData() {
+        return responseData;
+    }
+    void setResponseData(String responseData) {
+        this.responseData = responseData;
+    }
+    String getCallbackId() {
+        return callbackId;
+    }
+    void setCallbackId(String callbackId) {
+        this.callbackId = callbackId;
+    }
+    String getHandlerName() {
         return handlerName;
     }
-    public void setHandlerName(String handlerName) {
+    void setHandlerName(String handlerName) {
         this.handlerName = handlerName;
     }
 
-    public String toJson() {
+    String toJson() {
         JSONObject jsonObject= new JSONObject();
         try {
             jsonObject.put(CALLBACK_ID_STR, getCallbackId());
@@ -88,7 +89,7 @@ public class Message {
         return m;
     }
 
-    public static List<Message> toArrayList(String jsonStr){
+    static List<Message> toArrayList(String jsonStr){
         List<Message> list = new ArrayList<Message>();
         try {
             JSONArray jsonArray = new JSONArray(jsonStr);

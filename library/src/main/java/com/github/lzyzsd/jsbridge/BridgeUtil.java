@@ -1,7 +1,6 @@
 package com.github.lzyzsd.jsbridge;
 
 import android.content.Context;
-import android.util.Base64;
 import android.util.Log;
 import android.webkit.WebView;
 
@@ -21,14 +20,13 @@ class BridgeUtil {
     final static String CALLBACK_ID_FORMAT = "JAVA_CB_%s";
     final static String JS_HANDLE_MESSAGE_FROM_JAVA = "javascript:WebViewJavascriptBridge._handleMessageFromNative('%s');";
     final static String JS_FETCH_QUEUE_FROM_JAVA = "javascript:WebViewJavascriptBridge._fetchQueue();";
-    public final static String JAVASCRIPT_STR = "javascript:";
+    final static String JAVASCRIPT_STR = "javascript:";
 
     private static final String TAG = "WebBridgeUtil";
 
     static String parseFunctionName(String jsUrl){
         return jsUrl.replace("javascript:WebViewJavascriptBridge.", "").replaceAll("\\(.*\\);", "");
     }
-
 
     static String getDataFromReturnUrl(String url) {
         if(url.startsWith(YY_FETCH_QUEUE)) {
@@ -60,20 +58,11 @@ class BridgeUtil {
 
 
     /**
-     * js 文件将注入为第一个script引用
-     * @param view
-     * @param url
+     *  将本地js文件注入为第一个script引用
      */
-    public static void webViewLoadJs(WebView view, String url){
-        String js = "var newscript = document.createElement(\"script\");";
-        js += "newscript.src=\"" + url + "\";";
-        js += "document.scripts[0].parentNode.insertBefore(newscript,document.scripts[0]);";
-        view.loadUrl("javascript:" + js);
-    }
-
     static void webViewLoadLocalJs(WebView view, String path){
         String jsContent = assetFile2Str(view.getContext(), path);
-        view.loadUrl("javascript:" + jsContent);
+        view.loadUrl(JAVASCRIPT_STR + jsContent);
     }
 
     private static String assetFile2Str(Context c, String urlStr){
