@@ -5,13 +5,10 @@ import android.content.Context;
 import android.os.Build;
 import android.os.Looper;
 import android.os.SystemClock;
-import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.webkit.ValueCallback;
 import android.webkit.WebView;
-
-import org.json.JSONObject;
 
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Method;
@@ -20,7 +17,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Timer;
 
 @SuppressLint("SetJavaScriptEnabled")
 public class BridgeWebView extends WebView implements WebViewJavascriptBridge {
@@ -251,31 +247,27 @@ public class BridgeWebView extends WebView implements WebViewJavascriptBridge {
         if (BridgeUtil.useEvaluateJS()) {
             super.evaluateJavascript(script, callback);
         } else {
-            if (!reflectExecJS(this, script)) {
-                try {
-                    super.loadUrl(script);
-                    //responseCallbacks.put(BridgeUtil.parseFunctionName(script), returnCallback);
-                } catch (Exception e) {
-                    Log.e(TAG, e.getMessage(), e);
-                }
+            try {
+                super.loadUrl(script);
+                //responseCallbacks.put(BridgeUtil.parseFunctionName(script), returnCallback);
+            } catch (Exception e) {
+                Log.e(TAG, e.getMessage(), e);
             }
         }
     }
 
-
+    @Deprecated
     private static boolean reflectExecJS(WebView webView, String script) {
         final int JS_MAGIC_EXECUTE_JS = 194;
         try {
-            Object mSysWebView = new Reflector<>(webView, "mSysWebView").get();
-            Object mProvider = new Reflector<>(mSysWebView, "mProvider").get();
-            Object mWebViewCore = new Reflector<>(mProvider, "mWebViewCore").get();
+            Object mWebViewCore = new Reflector<>(webView, "mWebViewCore").get();
             Method sendMsgMethod = mWebViewCore.getClass().getDeclaredMethod("sendMessage", android.os.Message.class);
             sendMsgMethod.setAccessible(true);
             android.os.Message msg = android.os.Message.obtain(null, JS_MAGIC_EXECUTE_JS, script);
             sendMsgMethod.invoke(mWebViewCore, msg);
             return true;
         } catch (Exception e) {
-            Log.e("reflectExecJS", e.getMessage(), e);
+            Log.w("reflectExecJS", e.getMessage(), e);
         }
         return false;
     }
