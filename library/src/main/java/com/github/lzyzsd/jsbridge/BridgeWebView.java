@@ -23,7 +23,6 @@ public class BridgeWebView extends WebView implements WebViewJavascriptBridge {
     @SuppressLint("Unused")
     private final String TAG = "BridgeWebView";
 
-    public static final String toLoadJs = "WebViewJavascriptBridge.js";
     Map<String, ValueCallback<String>> responseCallbacks = new HashMap<>();
     Map<String, BridgeHandler> messageHandlers = new HashMap<>();
     BridgeHandler defaultHandler = new DefaultHandler();
@@ -75,9 +74,7 @@ public class BridgeWebView extends WebView implements WebViewJavascriptBridge {
         this.setWebViewClient(generateBridgeWebViewClient());
     }
 
-    private boolean useNativeCallback() {
-        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT;
-    }
+
 
     protected BridgeWebViewClient generateBridgeWebViewClient() {
         return new BridgeWebViewClient(this);

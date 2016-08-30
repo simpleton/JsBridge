@@ -1,6 +1,7 @@
 package com.github.lzyzsd.jsbridge;
 
 import android.content.Context;
+import android.os.Build;
 import android.util.Log;
 import android.webkit.WebView;
 
@@ -26,6 +27,10 @@ class BridgeUtil {
 
     static String parseFunctionName(String jsUrl){
         return jsUrl.replace("javascript:WebViewJavascriptBridge.", "").replaceAll("\\(.*\\);", "");
+    }
+
+    static boolean useEvaluateJS() {
+        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT;
     }
 
     static String getDataFromReturnUrl(String url) {
@@ -54,8 +59,6 @@ class BridgeUtil {
         }
         return null;
     }
-
-
 
     /**
      *  将本地js文件注入为第一个script引用
