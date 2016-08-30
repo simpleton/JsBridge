@@ -248,7 +248,7 @@ public class BridgeWebView extends WebView implements WebViewJavascriptBridge {
             Log.e(TAG, "Script is Empty");
             return;
         }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+        if (BridgeUtil.useEvaluateJS()) {
             super.evaluateJavascript(script, callback);
         } else {
             if (!reflectExecJS(this, script)) {
