@@ -11,7 +11,6 @@ import android.webkit.ValueCallback;
 import android.webkit.WebView;
 
 import java.io.UnsupportedEncodingException;
-import java.lang.reflect.Method;
 import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -232,7 +231,6 @@ public class BridgeWebView extends WebView implements WebViewJavascriptBridge {
     }
 
     public void loadUrl(String jsUrl, final ValueCallback<String> callback) {
-        Log.i(TAG, "loadUrl:" + jsUrl);
         evaluateJavascript(jsUrl, callback);
         if (!BridgeUtil.useEvaluateJS()) {
             responseCallbacks.put(BridgeUtil.parseFunctionName(jsUrl), callback);
@@ -249,29 +247,11 @@ public class BridgeWebView extends WebView implements WebViewJavascriptBridge {
         } else {
             try {
                 super.loadUrl(script);
-                //responseCallbacks.put(BridgeUtil.parseFunctionName(script), returnCallback);
             } catch (Exception e) {
                 Log.e(TAG, e.getMessage(), e);
             }
         }
     }
-
-    @Deprecated
-    private static boolean reflectExecJS(WebView webView, String script) {
-        final int JS_MAGIC_EXECUTE_JS = 194;
-        try {
-            Object mWebViewCore = new Reflector<>(webView, "mWebViewCore").get();
-            Method sendMsgMethod = mWebViewCore.getClass().getDeclaredMethod("sendMessage", android.os.Message.class);
-            sendMsgMethod.setAccessible(true);
-            android.os.Message msg = android.os.Message.obtain(null, JS_MAGIC_EXECUTE_JS, script);
-            sendMsgMethod.invoke(mWebViewCore, msg);
-            return true;
-        } catch (Exception e) {
-            Log.w("reflectExecJS", e.getMessage(), e);
-        }
-        return false;
-    }
-
 
     /**
      * register handler,so that javascript can call it
