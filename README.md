@@ -1,5 +1,7 @@
 #JsBridge
 
+[![](https://jitpack.io/v/simpleton/JsBridge.svg)](https://jitpack.io/#simpleton/JsBridge)
+
 -----
 
 inspired and modified from [this](https://github.com/jacin1/JsBridge) and wechat jsBridge file, with some bugs fix and feature enhancement.
@@ -24,7 +26,7 @@ repositories {
 }
 
 dependencies {
-    compile 'com.github.lzyzsd:jsbridge:1.0.4'
+    compile 'com.github.lzyzsd:jsbridge:1.1.0'
 }
 ```
 
@@ -40,7 +42,7 @@ add com.github.lzyzsd.jsbridge.BridgeWebView to your layout, it is inherited fro
         @Override
         public void handler(String data, CallBackFunction function) {
             Log.i(TAG, "handler = submitFromWeb, data from web = " + data);
-            function.onCallBack("submitFromWeb exe, response data from Java");
+            function.onReceiveValue("submitFromWeb exe, response data from Java");
         }
     });
 
@@ -97,7 +99,7 @@ Java can call this js handler function "functionInJs" through:
 
     webView.callHandler("functionInJs", new Gson().toJson(user), new CallBackFunction() {
         @Override
-        public void onCallBack(String data) {
+        public void onReceiveValue(String data) {
 
         }
     });
