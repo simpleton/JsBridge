@@ -88,7 +88,10 @@ You can set a default handler in Java, so that js can send message to Java witho
     WebViewJavascriptBridge.registerHandler("functionInJs", function(data, responseCallback) {
         document.getElementById("show").innerHTML = ("data from Java: = " + data);
         var responseData = "Javascript Says Right back aka!";
-        responseCallback(responseData);
+        if (typeof responseCallback != 'undefined') {
+            responseCallback(responseData);
+        }
+        return responseData;
     });
 
 ```
@@ -117,7 +120,10 @@ for example:
             'Javascript Responds': 'Wee!'
         };
         console.log('JS responding with', data);
-        responseCallback(data);
+        if (typeof responseCallback != 'undefined') {
+            responseCallback(data);
+        }
+        return data;
     });
 
 ```
