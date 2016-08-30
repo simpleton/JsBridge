@@ -1,5 +1,7 @@
 package com.github.lzyzsd.jsbridge;
 
+import android.util.Log;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -54,12 +56,13 @@ class Message {
     String getHandlerName() {
         return handlerName;
     }
+
     void setHandlerName(String handlerName) {
         this.handlerName = handlerName;
     }
 
     String toJson() {
-        JSONObject jsonObject= new JSONObject();
+        JSONObject jsonObject = new JSONObject();
         try {
             jsonObject.put(CALLBACK_ID_STR, getCallbackId());
             jsonObject.put(DATA_STR, getData());
@@ -73,7 +76,7 @@ class Message {
         return null;
     }
 
-    public static Message toObject(String jsonStr) {
+    static Message toObject(String jsonStr) {
         Message m =  new Message();
         try {
             JSONObject jsonObject = new JSONObject(jsonStr);
@@ -90,7 +93,8 @@ class Message {
     }
 
     static List<Message> toArrayList(String jsonStr){
-        List<Message> list = new ArrayList<Message>();
+        List<Message> list = new ArrayList<>();
+        if (BridgeUtil.isBlank(jsonStr)) return list;
         try {
             JSONArray jsonArray = new JSONArray(jsonStr);
             for(int i = 0; i < jsonArray.length(); i++){

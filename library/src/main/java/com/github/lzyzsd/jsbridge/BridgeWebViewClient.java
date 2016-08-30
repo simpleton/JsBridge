@@ -27,7 +27,9 @@ class BridgeWebViewClient extends WebViewClient {
         }
 
         if (url.startsWith(BridgeUtil.YY_RETURN_DATA)) { // 如果是返回数据
-            webView.handlerReturnData(url);
+            if (!BridgeUtil.useEvaluateJS()) {
+                webView.handlerReturnData(url);
+            }
             return true;
         } else if (url.startsWith(BridgeUtil.YY_OVERRIDE_SCHEMA)) { //
             webView.flushMessageQueue();

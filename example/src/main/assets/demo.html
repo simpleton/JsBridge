@@ -90,18 +90,25 @@
 
         connectWebViewJavascriptBridge(function(bridge) {
             bridge.init(function(message, responseCallback) {
-                console.log('JS got a message', message);
+                console.log('JS got a message ' + message);
                 var data = {
                     'Javascript Responds': '测试中文!'
                 };
-                console.log('JS responding with', data);
-                responseCallback(data);
+                console.log('JS responding with ' + data);
+                if (typeof responseCallback != 'undefined') {
+                    responseCallback(data);
+                }
+                return data;
             });
 
             bridge.registerHandler("functionInJs", function(data, responseCallback) {
                 document.getElementById("show").innerHTML = ("data from Java: = " + data);
                 var responseData = "Javascript Says Right back aka!";
-                responseCallback(responseData);
+                if (typeof responseCallback != 'undefined') {
+                    responseCallback(responseData);
+                }
+                console.log(responseData)
+                return responseData;
             });
         })
     </script>

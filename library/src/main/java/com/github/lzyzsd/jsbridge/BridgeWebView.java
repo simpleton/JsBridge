@@ -11,11 +11,16 @@ import android.util.Log;
 import android.webkit.ValueCallback;
 import android.webkit.WebView;
 
+import org.json.JSONObject;
+
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Method;
+import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Timer;
 
 @SuppressLint("SetJavaScriptEnabled")
 public class BridgeWebView extends WebView implements WebViewJavascriptBridge {
@@ -81,6 +86,7 @@ public class BridgeWebView extends WebView implements WebViewJavascriptBridge {
     }
 
     void handlerReturnData(String url) {
+
         String functionName = BridgeUtil.getFunctionFromReturnUrl(url);
         ValueCallback<String> f = responseCallbacks.get(functionName);
         String data = BridgeUtil.getDataFromReturnUrl(url);
@@ -102,16 +108,16 @@ public class BridgeWebView extends WebView implements WebViewJavascriptBridge {
 
     private void doSend(String handlerName, String data, ValueCallback<String> responseCallback) {
         Message m = new Message();
-        if (!TextUtils.isEmpty(data)) {
+        if (BridgeUtil.isPresent(data)) {
             m.setData(data);
+        }
+        if (BridgeUtil.isPresent(handlerName)) {
+            m.setHandlerName(handlerName);
         }
         if (responseCallback != null) {
             String callbackStr = String.format(BridgeUtil.CALLBACK_ID_FORMAT, ++uniqueId + (BridgeUtil.UNDERLINE_STR + SystemClock.currentThreadTimeMillis()));
             responseCallbacks.put(callbackStr, responseCallback);
             m.setCallbackId(callbackStr);
-        }
-        if (!TextUtils.isEmpty(handlerName)) {
-            m.setHandlerName(handlerName);
         }
         queueMessage(m);
     }
@@ -126,17 +132,12 @@ public class BridgeWebView extends WebView implements WebViewJavascriptBridge {
 
     void dispatchMessage(Message m) {
         String messageJson = m.toJson();
-        //escape special characters for json string
-        messageJson = messageJson.replaceAll("(\\\\)([^utrn])", "\\\\\\\\$1$2");
-        messageJson = messageJson.replaceAll("(?<=[^\\\\])(\")", "\\\\\"");
-        String javascriptCommand = String.format(BridgeUtil.JS_HANDLE_MESSAGE_FROM_JAVA, messageJson);
+        String javascriptCommand;
+        messageJson = BridgeUtil.escapeJsonString(messageJson);
+        javascriptCommand = String.format(BridgeUtil.JS_HANDLE_MESSAGE_FROM_JAVA, messageJson);
+        ValueCallback<String> callback = responseCallbacks.get(m.getCallbackId());
         if (Thread.currentThread() == Looper.getMainLooper().getThread()) {
-            this.loadUrl(javascriptCommand, new ValueCallback<String>() {
-                @Override
-                public void onReceiveValue(String s) {
-                    Log.i(TAG, s);
-                }
-            });
+            this.loadUrl(javascriptCommand, callback);
         }
     }
 
@@ -145,71 +146,105 @@ public class BridgeWebView extends WebView implements WebViewJavascriptBridge {
             loadUrl(BridgeUtil.JS_FETCH_QUEUE_FROM_JAVA, new ValueCallback<String>() {
                 @Override
                 public void onReceiveValue(String data) {
-                    // deserializeMessage
-                    List<Message> list;
-                    try {
-                        list = Message.toArrayList(data);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        return;
-                    }
-                    if (list == null || list.size() == 0) {
-                        return;
-                    }
-                    for (int i = 0; i < list.size(); i++) {
-                        Message m = list.get(i);
-                        String responseId = m.getResponseId();
-                        // 是否是response
-                        if (!TextUtils.isEmpty(responseId)) {
-                            ValueCallback<String> function = responseCallbacks.get(responseId);
-                            String responseData = m.getResponseData();
-                            function.onReceiveValue(responseData);
-                            responseCallbacks.remove(responseId);
-                        } else {
-                            ValueCallback<String> responseFunction;
-                            // if had callbackId
-                            final String callbackId = m.getCallbackId();
-                            if (!TextUtils.isEmpty(callbackId)) {
-                                responseFunction = new ValueCallback<String>() {
-                                    @Override
-                                    public void onReceiveValue(String data) {
-                                        Message responseMsg = new Message();
-                                        responseMsg.setResponseId(callbackId);
-                                        responseMsg.setResponseData(data);
-                                        queueMessage(responseMsg);
-                                    }
-                                };
-                            } else {
-                                responseFunction = new ValueCallback<String>() {
-                                    @Override
-                                    public void onReceiveValue(String s) {
-
-                                    }
-                                };
-                            }
-                            BridgeHandler handler;
-                            if (!TextUtils.isEmpty(m.getHandlerName())) {
-                                handler = messageHandlers.get(m.getHandlerName());
-                            } else {
-                                handler = defaultHandler;
-                            }
-                            if (handler != null){
-                                handler.handler(m.getData(), responseFunction);
-                            }
-                        }
+                    if (BridgeUtil.useEvaluateJS()) {
+                        handleMessageGE19(data);
+                    } else {
+                        handleMessageLT19(data);
                     }
                 }
             });
         }
     }
 
+    private void handleMessageGE19(String url) {
+        try {
+            url = URLDecoder.decode(url, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+            return;
+        }
+        // remove duplicate quotation
+        if (url.startsWith("\"") && url.endsWith("\"")) {
+            url = url.substring(1, url.length()-1);
+        }
+        if (url.startsWith(BridgeUtil.YY_RETURN_DATA)) { // 如果是返回数据
+            String data = BridgeUtil.getDataFromReturnUrl(url);
+            handleMessageList(data);
+        } else {
+            Log.e(TAG, String.format("Error Happened %s", url));
+        }
+    }
+
+    private void handleMessageLT19(String data) {
+        handleMessageList(data);
+    }
+
+    private void handleMessageList(String data) {
+        // deserializeMessage
+        List<Message> msgList;
+        try {
+            msgList = Message.toArrayList(data);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return;
+        }
+        if (BridgeUtil.isBlank(msgList)) {
+            return;
+        }
+
+        for (Message msg : msgList) {
+            String responseId = msg.getResponseId();
+            // 是否是response
+            if (BridgeUtil.isPresent(responseId)) {
+                ValueCallback<String> function = responseCallbacks.get(responseId);
+                String responseData = msg.getResponseData();
+                function.onReceiveValue(responseData);
+                responseCallbacks.remove(responseId);
+            } else {
+                ValueCallback<String> responseFunction;
+                // if had callbackId
+                final String callbackId = msg.getCallbackId();
+                if (BridgeUtil.isPresent(callbackId)) {
+                    responseFunction = new ValueCallback<String>() {
+                        @Override
+                        public void onReceiveValue(String data) {
+                            Message responseMsg = new Message();
+                            responseMsg.setResponseId(callbackId);
+                            responseMsg.setResponseData(data);
+                            queueMessage(responseMsg);
+                        }
+                    };
+                } else {
+                    responseFunction = new ValueCallback<String>() {
+                        @Override
+                        public void onReceiveValue(String s) {
+
+                        }
+                    };
+                }
+                BridgeHandler handler;
+                if (BridgeUtil.isPresent(msg.getHandlerName())) {
+                    handler = messageHandlers.get(msg.getHandlerName());
+                } else {
+                    handler = defaultHandler;
+                }
+                if (handler != null){
+                    handler.handler(msg.getData(), responseFunction);
+                }
+            }
+        }
+    }
+
     public void loadUrl(String jsUrl, final ValueCallback<String> callback) {
+        Log.i(TAG, "loadUrl:" + jsUrl);
         evaluateJavascript(jsUrl, callback);
-        responseCallbacks.put(BridgeUtil.parseFunctionName(jsUrl), callback);
+        if (!BridgeUtil.useEvaluateJS()) {
+            responseCallbacks.put(BridgeUtil.parseFunctionName(jsUrl), callback);
+        }
     }
 
     public void evaluateJavascript(String script, ValueCallback<String> callback) {
-        if (TextUtils.isEmpty(script)) {
+        if (BridgeUtil.isBlank(script)) {
             Log.e(TAG, "Script is Empty");
             return;
         }

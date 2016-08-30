@@ -28,8 +28,13 @@ public class MainActivity extends Activity implements OnClickListener {
 
     ValueCallback<Uri> mUploadMessage;
 
+    static class Name {
+        String name;
+    }
+
     static class Location {
         String address;
+        Name name;
     }
 
     static class User {
@@ -88,10 +93,13 @@ public class MainActivity extends Activity implements OnClickListener {
 
         User user = new User();
         Location location = new Location();
+        Name name = new Name();
+        name.name = "simsun_test";
         location.address = "SDU";
+        location.name = name;
         user.location = location;
         user.name = "大头鬼";
-
+        Log.i(TAG, new Gson().toJson(user));
         webView.callHandler("functionInJs", new Gson().toJson(user), new ValueCallback<String>() {
             @Override
             public void onReceiveValue(String s) {

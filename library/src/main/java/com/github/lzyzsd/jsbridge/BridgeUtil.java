@@ -9,6 +9,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.text.StringCharacterIterator;
+import java.util.List;
 
 class BridgeUtil {
     final static String YY_OVERRIDE_SCHEMA = "jsbridge://";
@@ -25,7 +27,7 @@ class BridgeUtil {
 
     private static final String TAG = "WebBridgeUtil";
 
-    static String parseFunctionName(String jsUrl){
+    static String parseFunctionName(String jsUrl) {
         return jsUrl.replace("javascript:WebViewJavascriptBridge.", "").replaceAll("\\(.*\\);", "");
     }
 
@@ -34,14 +36,14 @@ class BridgeUtil {
     }
 
     static String getDataFromReturnUrl(String url) {
-        if(url.startsWith(YY_FETCH_QUEUE)) {
+        if (url.startsWith(YY_FETCH_QUEUE)) {
             return url.replace(YY_FETCH_QUEUE, EMPTY_STR);
         }
 
         String temp = url.replace(YY_RETURN_DATA, EMPTY_STR);
         String[] functionAndData = temp.split(SPLIT_MARK);
 
-        if(functionAndData.length >= 2) {
+        if (functionAndData.length >= 2) {
             StringBuilder sb = new StringBuilder();
             for (int i = 1; i < functionAndData.length; i++) {
                 sb.append(functionAndData[i]);
@@ -54,23 +56,23 @@ class BridgeUtil {
     static String getFunctionFromReturnUrl(String url) {
         String temp = url.replace(YY_RETURN_DATA, EMPTY_STR);
         String[] functionAndData = temp.split(SPLIT_MARK);
-        if(functionAndData.length >= 1){
+        if (functionAndData.length >= 1) {
             return functionAndData[0];
         }
         return null;
     }
 
     /**
-     *  将本地js文件注入为第一个script引用
+     * 将本地js文件注入为第一个script引用
      */
-    static void webViewLoadLocalJs(WebView view, String path){
+    static void webViewLoadLocalJs(WebView view, String path) {
         String jsContent = assetFile2Str(view.getContext(), path);
         view.loadUrl(JAVASCRIPT_STR + jsContent);
     }
 
-    private static String assetFile2Str(Context c, String urlStr){
+    private static String assetFile2Str(Context c, String urlStr) {
         InputStream in = null;
-        try{
+        try {
             in = c.getAssets().open(urlStr);
             BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(in));
             String line = null;
@@ -84,12 +86,12 @@ class BridgeUtil {
 
             bufferedReader.close();
             in.close();
- 
+
             return sb.toString();
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
-            if(in != null) {
+            if (in != null) {
                 try {
                     in.close();
                 } catch (IOException e) {
@@ -98,5 +100,52 @@ class BridgeUtil {
             }
         }
         return null;
+    }
+
+    static boolean isPresent(List list) {
+        return list != null && list.size() > 0;
+    }
+
+    static boolean isPresent(String string) {
+        return string != null && string.length() > 0;
+    }
+
+    static boolean isBlank(List list) {
+        return !isPresent(list);
+    }
+
+    static boolean isBlank(String string) {
+        return !isPresent(string);
+    }
+
+    static String escapeJsonString(String jsonString) {
+        final StringBuilder result = new StringBuilder();
+        StringCharacterIterator iterator = new StringCharacterIterator(jsonString);
+        char character = iterator.current();
+        while (character != StringCharacterIterator.DONE) {
+            if (character == '\"') {
+                result.append("\\\"");
+            } else if (character == '\\') {
+                result.append("\\\\");
+            } else if (character == '/') {
+                result.append("\\/");
+            } else if (character == '\b') {
+                result.append("\\b");
+            } else if (character == '\f') {
+                result.append("\\f");
+            } else if (character == '\n') {
+                result.append("\\n");
+            } else if (character == '\r') {
+                result.append("\\r");
+            } else if (character == '\t') {
+                result.append("\\t");
+            } else {
+                //the char is not a special one
+                //add it to the result as is
+                result.append(character);
+            }
+            character = iterator.next();
+        }
+        return result.toString();
     }
 }
